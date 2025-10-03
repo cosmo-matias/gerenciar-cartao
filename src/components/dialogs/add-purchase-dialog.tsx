@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +25,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/hooks/use-toast';
+import type { Purchase } from '@/lib/types';
+
 
 const purchaseSchema = z.object({
   personId: z.string({ required_error: 'Selecione uma pessoa.' }),
@@ -38,11 +41,13 @@ const purchaseSchema = z.object({
 type AddPurchaseDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  purchase?: Purchase;
 };
 
-export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps) {
-  const { people, cards, addPurchase } = useAppContext();
+export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseDialogProps) {
+  const { people, cards, addPurchase, updatePurchase } = useAppContext();
   const { toast } = useToast();
+  const isEditMode = !!purchase;
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
@@ -51,20 +56,49 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
       items: '',
       totalAmount: '' as any,
       installments: 1,
-      purchaseDate: new Date(),
     },
   });
 
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset({
+        ...purchase,
+        purchaseDate: new Date(purchase.purchaseDate),
+      });
+    } else {
+      form.reset({
+        personId: undefined,
+        cardId: undefined,
+        store: '',
+        items: '',
+        totalAmount: '' as any,
+        installments: 1,
+        purchaseDate: new Date(),
+      });
+    }
+  }, [purchase, isEditMode, form, open]);
+
+
   const onSubmit = (values: z.infer<typeof purchaseSchema>) => {
-    addPurchase({
+    const purchaseData = {
       ...values,
       purchaseDate: values.purchaseDate.toISOString(),
-    });
-    toast({
-      title: "Sucesso!",
-      description: "Compra adicionada com sucesso.",
-    });
-    form.reset({ store: '', items: '', totalAmount: '' as any, purchaseDate: new Date(), installments: 1 });
+    };
+
+    if (isEditMode) {
+      updatePurchase({ id: purchase.id, ...purchaseData });
+       toast({
+        title: "Sucesso!",
+        description: "Compra atualizada com sucesso.",
+      });
+    } else {
+      addPurchase(purchaseData);
+      toast({
+        title: "Sucesso!",
+        description: "Compra adicionada com sucesso.",
+      });
+    }
+    
     onOpenChange(false);
   };
 
@@ -72,8 +106,10 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Compra</DialogTitle>
-          <DialogDescription>Preencha os dados da nova compra.</DialogDescription>
+          <DialogTitle>{isEditMode ? 'Editar Compra' : 'Adicionar Compra'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Atualize os dados da compra.' : 'Preencha os dados da nova compra.'}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -83,7 +119,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Pessoa</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a pessoa" />
@@ -160,7 +196,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cartão</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o cartão" />
@@ -214,7 +250,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Salvar Compra</Button>
+              <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>
         </Form>

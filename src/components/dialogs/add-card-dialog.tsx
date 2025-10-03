@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/hooks/use-toast';
+import type { Card } from '@/lib/types';
 
 const cardSchema = z.object({
   name: z.string().min(2, { message: 'Nome do cartão deve ter pelo menos 2 caracteres.' }),
@@ -27,11 +29,13 @@ const cardSchema = z.object({
 type AddCardDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  card?: Card;
 };
 
-export function AddCardDialog({ open, onOpenChange }: AddCardDialogProps) {
-  const { addCard } = useAppContext();
+export function AddCardDialog({ open, onOpenChange, card }: AddCardDialogProps) {
+  const { addCard, updateCard } = useAppContext();
   const { toast } = useToast();
+  const isEditMode = !!card;
 
   const form = useForm<z.infer<typeof cardSchema>>({
     resolver: zodResolver(cardSchema),
@@ -43,13 +47,34 @@ export function AddCardDialog({ open, onOpenChange }: AddCardDialogProps) {
     },
   });
 
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset(card);
+    } else {
+      form.reset({
+        name: '',
+        flag: '',
+        dueDate: '' as any,
+        closingDate: '' as any,
+      });
+    }
+  }, [card, isEditMode, form, open]);
+
+
   const onSubmit = (values: z.infer<typeof cardSchema>) => {
-    addCard(values);
-    toast({
-      title: "Sucesso!",
-      description: "Cartão adicionado com sucesso.",
-    });
-    form.reset();
+    if(isEditMode) {
+      updateCard({ id: card.id, ...values });
+      toast({
+        title: "Sucesso!",
+        description: "Cartão atualizado com sucesso.",
+      });
+    } else {
+      addCard(values);
+      toast({
+        title: "Sucesso!",
+        description: "Cartão adicionado com sucesso.",
+      });
+    }
     onOpenChange(false);
   };
 
@@ -57,8 +82,10 @@ export function AddCardDialog({ open, onOpenChange }: AddCardDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Cartão</DialogTitle>
-          <DialogDescription>Preencha os dados do novo cartão de crédito.</DialogDescription>
+          <DialogTitle>{isEditMode ? 'Editar Cartão' : 'Adicionar Cartão'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Atualize os dados do cartão de crédito.' : 'Preencha os dados do novo cartão de crédito.'}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -117,7 +144,7 @@ export function AddCardDialog({ open, onOpenChange }: AddCardDialogProps) {
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Salvar Cartão</Button>
+              <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>
         </Form>

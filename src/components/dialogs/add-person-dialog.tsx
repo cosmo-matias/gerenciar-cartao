@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/hooks/use-toast';
+import type { Person } from '@/lib/types';
 
 const personSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres.' }),
@@ -25,11 +27,13 @@ const personSchema = z.object({
 type AddPersonDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  person?: Person;
 };
 
-export function AddPersonDialog({ open, onOpenChange }: AddPersonDialogProps) {
-  const { addPerson } = useAppContext();
+export function AddPersonDialog({ open, onOpenChange, person }: AddPersonDialogProps) {
+  const { addPerson, updatePerson } = useAppContext();
   const { toast } = useToast();
+  const isEditMode = !!person;
 
   const form = useForm<z.infer<typeof personSchema>>({
     resolver: zodResolver(personSchema),
@@ -39,27 +43,39 @@ export function AddPersonDialog({ open, onOpenChange }: AddPersonDialogProps) {
     },
   });
 
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset(person);
+    } else {
+      form.reset({ name: '', phone: '' });
+    }
+  }, [person, isEditMode, form, open]);
+
   const onSubmit = (values: z.infer<typeof personSchema>) => {
-    addPerson(values);
-    toast({
-      title: "Sucesso!",
-      description: "Pessoa adicionada com sucesso.",
-    });
-    form.reset();
+    if(isEditMode) {
+      updatePerson({ id: person.id, ...values });
+      toast({
+        title: "Sucesso!",
+        description: "Pessoa atualizada com sucesso.",
+      });
+    } else {
+      addPerson(values);
+      toast({
+        title: "Sucesso!",
+        description: "Pessoa adicionada com sucesso.",
+      });
+    }
     onOpenChange(false);
   };
   
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-        if (!isOpen) {
-            form.reset();
-        }
-        onOpenChange(isOpen);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Pessoa</DialogTitle>
-          <DialogDescription>Cadastre uma nova pessoa para associar às compras.</DialogDescription>
+          <DialogTitle>{isEditMode ? 'Editar Pessoa' : 'Adicionar Pessoa'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Atualize os dados da pessoa.' : 'Cadastre uma nova pessoa para associar às compras.'}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -90,7 +106,7 @@ export function AddPersonDialog({ open, onOpenChange }: AddPersonDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Salvar Pessoa</Button>
+              <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>
         </Form>

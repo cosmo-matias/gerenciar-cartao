@@ -13,7 +13,7 @@ export interface Card {
 }
 
 export interface Purchase {
-  id:string;
+  id: string;
   personId: string;
   cardId: string;
   store: string;

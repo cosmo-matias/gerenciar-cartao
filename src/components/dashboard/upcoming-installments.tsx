@@ -10,9 +10,35 @@ import { getMonth, getYear, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import type { Purchase } from '@/lib/types';
 
-export function UpcomingInstallments({ className }: { className?: string }) {
-  const { purchases, cards, people, isLoaded } = useAppContext();
+
+interface UpcomingInstallmentsProps {
+  className?: string;
+  onEdit: (purchase: Purchase) => void;
+}
+
+export function UpcomingInstallments({ className, onEdit }: UpcomingInstallmentsProps) {
+  const { purchases, cards, people, isLoaded, deletePurchase } = useAppContext();
 
   const upcomingInstallments = useMemo(() => {
     if (!isLoaded) return [];
@@ -23,7 +49,8 @@ export function UpcomingInstallments({ className }: { className?: string }) {
     return purchases
       .flatMap(purchase => {
         const card = cards.find(c => c.id === purchase.cardId);
-        return card ? calculateInstallments(purchase, card) : [];
+        const allInstallments = card ? calculateInstallments(purchase, card) : [];
+        return allInstallments.map(inst => ({...inst, originalPurchase: purchase}));
       })
       .filter(installment => {
         const dueDate = new Date(installment.dueDate);
@@ -40,6 +67,10 @@ export function UpcomingInstallments({ className }: { className?: string }) {
   }, [purchases, cards, people, isLoaded]);
 
   const emptyStateImage = PlaceHolderImages.find(img => img.id === 'empty-state-illustration');
+
+  const findPurchaseById = (purchaseId: string) => {
+    return purchases.find(p => p.id === purchaseId);
+  }
 
   return (
     <Card className={className}>
@@ -63,7 +94,8 @@ export function UpcomingInstallments({ className }: { className?: string }) {
                 <TableHead>Pessoa</TableHead>
                 <TableHead>Loja</TableHead>
                 <TableHead>Parcela</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -72,7 +104,48 @@ export function UpcomingInstallments({ className }: { className?: string }) {
                   <TableCell className="font-medium">{installment.personName}</TableCell>
                   <TableCell>{installment.store}</TableCell>
                   <TableCell>{`${installment.installmentNumber}/${installment.totalInstallments}`}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(installment.amount)}</TableCell>
+                  <TableCell>{formatCurrency(installment.amount)}</TableCell>
+                   <TableCell className="text-right">
+                       <AlertDialog>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              const purchase = findPurchaseById(installment.purchaseId);
+                              if(purchase) onEdit(purchase);
+                            }}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar Compra
+                            </DropdownMenuItem>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir Compra
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Essa ação não pode ser desfeita. Isso excluirá permanentemente a compra e todas as suas parcelas.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deletePurchase(installment.purchaseId)} className="bg-red-600 hover:bg-red-700">
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                 </TableRow>
               ))}
             </TableBody>
