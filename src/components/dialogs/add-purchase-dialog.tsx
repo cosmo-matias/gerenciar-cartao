@@ -46,7 +46,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
       store: '',
-      totalAmount: undefined,
+      totalAmount: '' as any,
       installments: 1,
       purchaseDate: new Date(),
     },

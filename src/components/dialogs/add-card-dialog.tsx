@@ -38,8 +38,8 @@ export function AddCardDialog({ open, onOpenChange }: AddCardDialogProps) {
     defaultValues: {
       name: '',
       flag: '',
-      dueDate: undefined,
-      closingDate: undefined,
+      dueDate: '' as any,
+      closingDate: '' as any,
     },
   });
 
