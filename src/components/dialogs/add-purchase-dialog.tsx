@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -28,6 +29,7 @@ const purchaseSchema = z.object({
   personId: z.string({ required_error: 'Selecione uma pessoa.' }),
   cardId: z.string({ required_error: 'Selecione um cartão.' }),
   store: z.string().min(2, { message: 'Nome da loja deve ter pelo menos 2 caracteres.' }),
+  items: z.string().min(2, { message: 'A descrição dos itens deve ter pelo menos 2 caracteres.' }),
   totalAmount: z.coerce.number().positive({ message: 'Valor deve ser positivo.' }),
   installments: z.coerce.number().int().min(1, { message: 'Mínimo de 1 parcela.' }),
   purchaseDate: z.date({ required_error: 'Selecione a data da compra.' }),
@@ -46,7 +48,8 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
       store: '',
-      totalAmount: '' as any,
+      items: '',
+      totalAmount: undefined,
       installments: 1,
       purchaseDate: new Date(),
     },
@@ -61,7 +64,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
       title: "Sucesso!",
       description: "Compra adicionada com sucesso.",
     });
-    form.reset({ purchaseDate: new Date(), installments: 1 });
+    form.reset({ store: '', items: '', totalAmount: undefined, purchaseDate: new Date(), installments: 1 });
     onOpenChange(false);
   };
 
@@ -104,6 +107,19 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
                   <FormLabel>Loja</FormLabel>
                   <FormControl>
                     <Input placeholder="Nome da loja" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="items"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Itens Comprados</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Ex: Camisa, Calça, etc." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

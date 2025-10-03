@@ -17,6 +17,7 @@ export interface Purchase {
   personId: string;
   cardId: string;
   store: string;
+  items: string;
   totalAmount: number;
   installments: number;
   purchaseDate: string; // ISO string
