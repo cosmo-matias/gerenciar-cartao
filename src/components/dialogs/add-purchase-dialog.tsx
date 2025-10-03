@@ -49,7 +49,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
     defaultValues: {
       store: '',
       items: '',
-      totalAmount: undefined,
+      totalAmount: '' as any,
       installments: 1,
       purchaseDate: new Date(),
     },
@@ -64,7 +64,7 @@ export function AddPurchaseDialog({ open, onOpenChange }: AddPurchaseDialogProps
       title: "Sucesso!",
       description: "Compra adicionada com sucesso.",
     });
-    form.reset({ store: '', items: '', totalAmount: undefined, purchaseDate: new Date(), installments: 1 });
+    form.reset({ store: '', items: '', totalAmount: '' as any, purchaseDate: new Date(), installments: 1 });
     onOpenChange(false);
   };
 
