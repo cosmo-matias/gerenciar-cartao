@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "empty-state-illustration",
+      "description": "An illustration showing a person managing finances, for use in empty states.",
+      "imageUrl": "https://images.unsplash.com/photo-1647511256098-75416d6500d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmaW5hbmNlJTIwbWFuYWdlfGVufDB8fHx8MTc1OTUxNzAxNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "finance manage"
+    }
+  ]
 }
