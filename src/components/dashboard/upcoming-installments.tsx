@@ -9,11 +9,13 @@ import { calculateInstallments, formatCurrency } from '@/lib/utils';
 import { getMonth, getYear, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function UpcomingInstallments({ className }: { className?: string }) {
-  const { purchases, cards, people } = useAppContext();
+  const { purchases, cards, people, isLoaded } = useAppContext();
 
   const upcomingInstallments = useMemo(() => {
+    if (!isLoaded) return [];
     const now = new Date();
     const currentMonth = getMonth(now);
     const currentYear = getYear(now);
@@ -35,7 +37,7 @@ export function UpcomingInstallments({ className }: { className?: string }) {
         };
       })
       .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-  }, [purchases, cards, people]);
+  }, [purchases, cards, people, isLoaded]);
 
   const emptyStateImage = PlaceHolderImages.find(img => img.id === 'empty-state-illustration');
 
@@ -48,7 +50,13 @@ export function UpcomingInstallments({ className }: { className?: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {upcomingInstallments.length > 0 ? (
+        {!isLoaded ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+        ) : upcomingInstallments.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>

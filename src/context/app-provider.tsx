@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { Person, Card, Purchase } from '@/lib/types';
 
@@ -11,6 +11,7 @@ interface AppContextType {
   addCard: (cardData: Omit<Card, 'id'>) => void;
   purchases: Purchase[];
   addPurchase: (purchaseData: Omit<Purchase, 'id'>) => void;
+  isLoaded: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,6 +26,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [people, setPeople] = useLocalStorage<Person[]>('cardbuddy_people', initialData.people);
   const [cards, setCards] = useLocalStorage<Card[]>('cardbuddy_cards', initialData.cards);
   const [purchases, setPurchases] = useLocalStorage<Purchase[]>('cardbuddy_purchases', initialData.purchases);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const addPerson = (personData: Omit<Person, 'id'>) => {
     const newPerson: Person = { id: crypto.randomUUID(), ...personData };
@@ -48,6 +54,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addCard,
     purchases,
     addPurchase,
+    isLoaded,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
