@@ -77,7 +77,7 @@ export function PeopleView({ className, onEditPerson }: PeopleViewProps) {
             {peopleWithDetails.map(person => (
               <AccordionItem value={person.id} key={person.id}>
                 <div className="flex items-center w-full pr-1">
-                    <AccordionTrigger className="flex-1 pr-2">
+                    <AccordionTrigger className="w-full">
                         <div className="flex justify-between items-center w-full">
                             <span className="font-medium">{person.name}</span>
                             <span className="text-sm text-muted-foreground">{formatCurrency(person.totalOwed)}</span>
