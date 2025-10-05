@@ -28,7 +28,7 @@ import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
 import { extractPurchaseInfo } from '@/ai/flows/extract-purchase-info-flow';
-import { Separator } from '../ui/separator';
+import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 
 
@@ -273,7 +273,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cartão</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueeChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o cartão" />
