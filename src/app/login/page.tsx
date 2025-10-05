@@ -14,6 +14,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppLogo } from '@/components/icons';
+import Link from 'next/link';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +44,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -71,7 +73,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Erro no login',
-        description: error.message || 'Ocorreu um erro ao tentar fazer login.',
+        description: error.code === 'auth/invalid-credential' ? 'E-mail ou senha inválidos.' : error.message,
       });
     } finally {
       setIsSubmitting(false);
@@ -96,6 +98,8 @@ export default function LoginPage() {
         title: "E-mail de recuperação enviado",
         description: "Verifique sua caixa de entrada para redefinir sua senha.",
       });
+      setIsResetDialogOpen(false); // Close dialog on success
+      setResetEmail(''); // Clear email field
     } catch (error: any) {
        toast({
         variant: "destructive",
@@ -104,8 +108,6 @@ export default function LoginPage() {
       });
     } finally {
       setIsResetting(false);
-      // Close the dialog by finding its cancel button
-       document.getElementById('reset-cancel-button')?.click();
     }
   }
 
@@ -168,7 +170,7 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            <AlertDialog>
+             <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
               <AlertDialogTrigger asChild>
                 <button className="underline">Esqueceu sua senha?</button>
               </AlertDialogTrigger>
@@ -190,7 +192,7 @@ export default function LoginPage() {
                     />
                 </div>
                 <AlertDialogFooter>
-                  <AlertDialogCancel id="reset-cancel-button">Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction onClick={handlePasswordReset} disabled={isResetting}>
                     {isResetting ? 'Enviando...' : 'Enviar Link'}
                   </AlertDialogAction>
@@ -200,6 +202,12 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
+        <div className="mt-4 text-center text-sm">
+            Não tem uma conta?{' '}
+            <Link href="/signup" className="underline">
+                Cadastre-se
+            </Link>
+        </div>
     </div>
   );
 }
