@@ -77,7 +77,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
       <CardHeader>
         <CardTitle>Parcelas a Vencer no Mês</CardTitle>
         <CardDescription>
-          Estas são as parcelas com vencimento em {format(new Date(), 'MMMM', { locale: ptBR })}.
+          Vencimentos em {format(new Date(), 'MMMM', { locale: ptBR })}.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -151,13 +151,13 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
             </TableBody>
           </Table>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-4 text-center py-10">
+          <div className="flex flex-col items-center justify-center gap-4 text-center py-10 h-[250px]">
             {emptyStateImage && (
               <Image
                 src={emptyStateImage.imageUrl}
                 alt={emptyStateImage.description}
-                width={300}
-                height={225}
+                width={200}
+                height={150}
                 className="rounded-lg"
                 data-ai-hint={emptyStateImage.imageHint}
               />

@@ -8,6 +8,7 @@ import { AddPurchaseDialog } from '@/components/dialogs/add-purchase-dialog';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
 import { UpcomingInstallments } from '@/components/dashboard/upcoming-installments';
 import { ManagementTabs } from '@/components/dashboard/management-tabs';
+import { SpendingByPersonChart } from '@/components/dashboard/spending-by-person-chart';
 import type { Person, Card, Purchase } from '@/lib/types';
 
 export default function Home() {
@@ -43,15 +44,15 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <SummaryCards />
-        <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-12">
-          <UpcomingInstallments className="lg:col-span-7" onEdit={handleEditPurchase} />
-          <ManagementTabs 
-            className="lg:col-span-5" 
-            onEditPerson={handleEditPerson}
-            onEditCard={handleEditCard}
-            onEditPurchase={handleEditPurchase}
-          />
+        <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-2">
+          <UpcomingInstallments onEdit={handleEditPurchase} />
+          <SpendingByPersonChart />
         </div>
+        <ManagementTabs 
+          onEditPerson={handleEditPerson}
+          onEditCard={handleEditCard}
+          onEditPurchase={handleEditPurchase}
+        />
       </main>
       <AddPersonDialog 
         key={editingPerson?.id || 'new-person'}

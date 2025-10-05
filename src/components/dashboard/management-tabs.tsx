@@ -20,7 +20,7 @@ export function ManagementTabs({ className, onEditPerson, onEditCard, onEditPurc
       <CardHeader>
         <CardTitle>Gerenciamento</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <Tabs defaultValue="people">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="people">Pessoas</TabsTrigger>
