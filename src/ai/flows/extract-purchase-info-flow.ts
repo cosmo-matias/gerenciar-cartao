@@ -11,7 +11,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Define o esquema para a entrada da IA (não exportado)
 const ExtractPurchaseInfoInputSchema = z.object({
   text: z.string().describe('O texto em linguagem natural descrevendo a compra.'),
   people: z.array(z.object({ id: z.string(), name: z.string() })).describe('A lista de pessoas disponíveis para associar à compra.'),
@@ -19,7 +18,6 @@ const ExtractPurchaseInfoInputSchema = z.object({
 });
 export type ExtractPurchaseInfoInput = z.infer<typeof ExtractPurchaseInfoInputSchema>;
 
-// Define o esquema para a saída da IA (não exportado)
 const ExtractPurchaseInfoOutputSchema = z.object({
   personId: z.string().optional().describe('O ID da pessoa que fez a compra, correspondendo à lista de pessoas fornecida.'),
   cardId: z.string().optional().describe('O ID do cartão de crédito usado, correspondendo à lista de cartões fornecida.'),

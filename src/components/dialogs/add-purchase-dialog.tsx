@@ -180,7 +180,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
             </Button>
         </div>
 
-        <div className="relative">
+        <div className="relative my-4">
           <Separator />
           <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-background px-2 text-xs text-muted-foreground">
             OU
@@ -273,11 +273,11 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cartão</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValuechaveChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o cartão" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {cards.map(card => (
@@ -293,7 +293,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
                 control={form.control}
                 name="purchaseDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="flex flex-col pt-2">
                     <FormLabel>Data da Compra</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -335,5 +335,3 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
     </Dialog>
   );
 }
-
-    
