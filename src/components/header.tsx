@@ -2,8 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/icons';
-import { PlusCircle, UserPlus, CreditCard, ShoppingBag } from 'lucide-react';
+import { PlusCircle, UserPlus, CreditCard, ShoppingBag, LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 type HeaderProps = {
   onAddPerson: () => void;
@@ -12,6 +15,14 @@ type HeaderProps = {
 };
 
 export function Header({ onAddPerson, onAddCard, onAddPurchase }: HeaderProps) {
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <div className="flex items-center gap-2">
@@ -54,6 +65,9 @@ export function Header({ onAddPerson, onAddCard, onAddPurchase }: HeaderProps) {
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
+        <Button variant="outline" size="icon" onClick={handleLogout} aria-label="Sair">
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   );

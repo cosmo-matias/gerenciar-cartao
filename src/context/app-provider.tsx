@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import {
   addDocumentNonBlocking,
@@ -9,7 +10,6 @@ import {
 } from '@/firebase/non-blocking-updates';
 import { collection, doc, Firestore } from 'firebase/firestore';
 import type { Person, Card, Purchase } from '@/lib/types';
-import { initiateAnonymousSignIn, useAuth } from '@/firebase';
 
 interface AppContextType {
   people: Person[];
@@ -35,14 +35,16 @@ const getCollectionRef = (firestore: Firestore, userId: string, path: string) =>
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const firestore = useFirestore();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!user && !isUserLoading) {
-      initiateAnonymousSignIn(auth);
+    // If auth is loaded and there's no user, redirect to login.
+    if (!isUserLoading && !user) {
+      router.push('/login');
     }
-  }, [user, isUserLoading, auth]);
+  }, [user, isUserLoading, router]);
+
 
   const peopleCollectionRef = useMemoFirebase(
     () => (user ? getCollectionRef(firestore, user.uid, 'people') : null),
@@ -62,8 +64,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: purchasesData, isLoading: purchasesLoading } = useCollection<Purchase>(purchasesCollectionRef);
   
   const isLoaded = useMemo(() => {
-    return !!user && !peopleLoading && !cardsLoading && !purchasesLoading;
-  }, [user, peopleLoading, cardsLoading, purchasesLoading]);
+    // Data is loaded only if auth is resolved and all firestore hooks are done.
+    return !isUserLoading && user && !peopleLoading && !cardsLoading && !purchasesLoading;
+  }, [user, isUserLoading, peopleLoading, cardsLoading, purchasesLoading]);
+
 
   const addPerson = (personData: Omit<Person, 'id'>) => {
     if (!peopleCollectionRef) return;
@@ -135,7 +139,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isLoaded,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  // Render children only if user is logged in or in the process of loading.
+  // This prevents brief flashes of the main app content before redirecting.
+  if (isUserLoading || user) {
+    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  }
+
+  // If not loading and no user, we are about to redirect. Return null or a loader.
+  return null;
 }
 
 export const useAppContext = (): AppContextType => {
