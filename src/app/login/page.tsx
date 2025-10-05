@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -73,7 +73,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Erro no login',
-        description: error.code === 'auth/invalid-credential' ? 'E-mail ou senha inválidos.' : error.message,
+        description: error.message,
       });
     } finally {
       setIsSubmitting(false);

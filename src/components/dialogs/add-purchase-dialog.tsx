@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
 
 
@@ -85,7 +85,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
       purchaseDate: values.purchaseDate.toISOString(),
     };
 
-    if (isEditMode) {
+    if (isEditMode && purchase) {
       updatePurchase({ id: purchase.id, ...purchaseData });
        toast({
         title: "Sucesso!",
