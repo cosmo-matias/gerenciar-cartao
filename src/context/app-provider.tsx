@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import {
   addDocumentNonBlocking,
@@ -37,13 +37,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // If auth is loaded and there's no user, redirect to login.
-    if (!isUserLoading && !user) {
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    // If auth is loaded, there's no user, and we are NOT on an auth page, redirect to login.
+    if (!isUserLoading && !user && !isAuthPage) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, pathname]);
 
 
   const peopleCollectionRef = useMemoFirebase(
@@ -138,14 +140,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deletePurchase,
     isLoaded,
   };
+  
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-  // Render children only if user is logged in or in the process of loading.
-  // This prevents brief flashes of the main app content before redirecting.
-  if (isUserLoading || user) {
+  // If the user is not logged in AND we are on an auth page, render the children (login/signup page).
+  if (!user && isAuthPage) {
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
   }
 
-  // If not loading and no user, we are about to redirect. Return null or a loader.
+  // If the user is logged in or is loading, render the children for other pages.
+  if (user || isUserLoading) {
+    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  }
+
+  // In other cases (e.g., not logged in and not on auth page), return null while redirecting.
   return null;
 }
 
