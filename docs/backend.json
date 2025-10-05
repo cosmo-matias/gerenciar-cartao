@@ -1,0 +1,181 @@
+{
+  "entities": {
+    "Person": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Person",
+      "type": "object",
+      "description": "Represents a person who makes purchases using a credit card.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Person entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the person."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the person."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "phoneNumber"
+      ]
+    },
+    "CreditCard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CreditCard",
+      "type": "object",
+      "description": "Represents a credit card used for making purchases.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CreditCard entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the credit card."
+        },
+        "brand": {
+          "type": "string",
+          "description": "The brand or issuer of the credit card (e.g., Visa, Mastercard)."
+        },
+        "dueDate": {
+          "type": "number",
+          "description": "The day of the month the credit card payment is due."
+        },
+        "closingDate": {
+          "type": "number",
+          "description": "The day of the month the credit card billing cycle closes."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "brand",
+        "dueDate",
+        "closingDate"
+      ]
+    },
+    "Purchase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Purchase",
+      "type": "object",
+      "description": "Represents a purchase made with a credit card.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Purchase entity."
+        },
+        "personId": {
+          "type": "string",
+          "description": "Reference to Person. (Relationship: Person 1:N Purchase)"
+        },
+        "creditCardId": {
+          "type": "string",
+          "description": "Reference to CreditCard. (Relationship: CreditCard 1:N Purchase)"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the purchase."
+        },
+        "installments": {
+          "type": "number",
+          "description": "The number of installments for the purchase."
+        },
+        "purchaseDate": {
+          "type": "string",
+          "description": "The date the purchase was made.",
+          "format": "date-time"
+        },
+        "store": {
+          "type": "string",
+          "description": "The name of the store where the purchase was made."
+        }
+      },
+      "required": [
+        "id",
+        "personId",
+        "creditCardId",
+        "totalAmount",
+        "installments",
+        "purchaseDate",
+        "store"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/people/{personId}",
+        "definition": {
+          "entityName": "Person",
+          "schema": {
+            "$ref": "#/backend/entities/Person"
+          },
+          "description": "Stores personal information for each person. Path-based ownership: Only the user with the matching {userId} can access this data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "personId",
+              "description": "The unique identifier for the person."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/creditCards/{creditCardId}",
+        "definition": {
+          "entityName": "CreditCard",
+          "schema": {
+            "$ref": "#/backend/entities/CreditCard"
+          },
+          "description": "Stores credit card information for each user. Path-based ownership: Only the user with the matching {userId} can access this data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "creditCardId",
+              "description": "The unique identifier for the credit card."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/purchases/{purchaseId}",
+        "definition": {
+          "entityName": "Purchase",
+          "schema": {
+            "$ref": "#/backend/entities/Purchase"
+          },
+          "description": "Stores purchase information for each user. Path-based ownership: Only the user with the matching {userId} can access this data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "purchaseId",
+              "description": "The unique identifier for the purchase."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to manage personal finance data, focusing on people, credit cards, and purchases. It uses path-based ownership for user-specific data to ensure clear ownership and straightforward security rules. This structure prioritizes authorization independence by avoiding hierarchical dependencies, which simplifies security rules and enhances data integrity. The structure supports the required QAPs through segregation of data based on ownership. Specifically, each user's data (credit cards and purchases) is stored under their unique user ID, ensuring that list operations can be securely performed without complex filtering logic in the rules."
+  }
+}

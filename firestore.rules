@@ -1,0 +1,121 @@
+/**
+ * @fileoverview Firestore Security Rules for a personal finance application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has full control over their
+ * data, including people, credit cards, and purchases. No data is shared between users.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, ensuring that only the authenticated user can
+ * access their own data.  Specifically:
+ * - /users/{userId}/people/{personId} stores personal information.
+ * - /users/{userId}/creditCards/{creditCardId} stores credit card details.
+ * - /users/{userId}/purchases/{purchaseId} tracks purchase history.
+ *
+ * Key Security Decisions:
+ * - Users cannot list all users.
+ * - All write operations are validated against the authenticated user's ID.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces access control for Person documents.
+     * @path /users/{userId}/people/{personId}
+     * @allow (create) - Authenticated user with UID 'user123' can create a new Person document under /users/user123/people/ with personId 'person456'.
+     * @allow (get) - Authenticated user with UID 'user123' can read a Person document under /users/user123/people/person456.
+     * @allow (update) - Authenticated user with UID 'user123' can update a Person document under /users/user123/people/person456.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete a Person document under /users/user123/people/person456.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create a Person document under /users/user123/people/person456.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/people/{personId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      //Helper function to check if the user is the owner and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == personId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces access control for CreditCard documents.
+     * @path /users/{userId}/creditCards/{creditCardId}
+     * @allow (create) - Authenticated user with UID 'user123' can create a new CreditCard document under /users/user123/creditCards/ with creditCardId 'card789'.
+     * @allow (get) - Authenticated user with UID 'user123' can read a CreditCard document under /users/user123/creditCards/card789.
+     * @allow (update) - Authenticated user with UID 'user123' can update a CreditCard document under /users/user123/creditCards/card789.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete a CreditCard document under /users/user123/creditCards/card789.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create a CreditCard document under /users/user123/creditCards/card789.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/creditCards/{creditCardId} {
+        // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      //Helper function to check if the user is the owner and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == creditCardId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces access control for Purchase documents.
+     * @path /users/{userId}/purchases/{purchaseId}
+     * @allow (create) - Authenticated user with UID 'user123' can create a new Purchase document under /users/user123/purchases/ with purchaseId 'purchase101'.
+     * @allow (get) - Authenticated user with UID 'user123' can read a Purchase document under /users/user123/purchases/purchase101.
+     * @allow (update) - Authenticated user with UID 'user123' can update a Purchase document under /users/user123/purchases/purchase101.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete a Purchase document under /users/user123/purchases/purchase101.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create a Purchase document under /users/user123/purchases/purchase101.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/purchases/{purchaseId} {
+      // Helper function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Helper function to check if the user is the owner
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      //Helper function to check if the user is the owner and the resource exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == purchaseId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+  }
+}
