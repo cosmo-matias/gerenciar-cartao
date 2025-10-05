@@ -9,15 +9,29 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AppLogo } from '@/components/icons';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
   password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
+});
+
+const passwordResetSchema = z.object({
+  email: z.string().email({ message: 'Por favor, insira um e-mail válido para recuperar a senha.' }),
 });
 
 export default function LoginPage() {
@@ -26,6 +40,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -60,6 +76,38 @@ export default function LoginPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handlePasswordReset = async () => {
+    const result = passwordResetSchema.safeParse({ email: resetEmail });
+    if (!result.success) {
+      toast({
+        variant: "destructive",
+        title: "E-mail inválido",
+        description: result.error.errors[0].message,
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, result.data.email);
+      toast({
+        title: "E-mail de recuperação enviado",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Erro ao enviar e-mail",
+        description: error.message || "Não foi possível enviar o e-mail de recuperação.",
+      });
+    } finally {
+      setIsResetting(false);
+      // Close the dialog by finding its cancel button
+       document.getElementById('reset-cancel-button')?.click();
+    }
+  }
+
 
   if (isUserLoading || user) {
     return (
@@ -119,10 +167,35 @@ export default function LoginPage() {
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Não tem uma conta?{' '}
-            <Link href="/signup" className="underline">
-              Cadastre-se
-            </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="underline">Esqueceu sua senha?</button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Recuperar Senha</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Digite seu e-mail abaixo. Enviaremos um link para você redefinir sua senha.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-2">
+                   <Label htmlFor="reset-email">E-mail</Label>
+                   <Input 
+                      id="reset-email"
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel id="reset-cancel-button">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handlePasswordReset} disabled={isResetting}>
+                    {isResetting ? 'Enviando...' : 'Enviar Link'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>
