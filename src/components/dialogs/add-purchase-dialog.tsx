@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -27,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
-import { extractPurchaseInfo } from '@/ai/flows/extract-purchase-info-flow';
+import { extractPurchaseInfo, type ExtractPurchaseInfoOutput, type ExtractPurchaseInfoInput } from '@/ai/flows/extract-purchase-info-flow';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 
@@ -140,7 +141,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
     };
 
     if (isEditMode && purchase) {
-      updatePurchase({ id: purchase.id, ...purchaseData });
+      updatePurchase({ id: purchase.id, ...purchaseData, paidInstallments: purchase.paidInstallments || [] });
        toast({
         title: "Sucesso!",
         description: "Compra atualizada com sucesso.",
@@ -162,30 +163,34 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Editar Compra' : 'Adicionar Compra'}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Atualize os dados da compra ou use a IA para preencher.' : 'Descreva a compra para a IA ou preencha os dados manualmente.'}
+            {isEditMode ? 'Atualize os dados da compra.' : 'Descreva a compra para a IA ou preencha os dados manualmente.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-            <Label htmlFor="ai-text">Assistente de Compras</Label>
-            <Textarea
-              id="ai-text"
-              placeholder="Ex: Comprei 2 pizzas para a Maria por R$ 80, no crédito em 1x no Inter."
-              value={aiText}
-              onChange={(e) => setAiText(e.target.value)}
-            />
-            <Button onClick={handleExtract} disabled={isExtracting} size="sm" className="w-full">
-              <Sparkles className="mr-2 h-4 w-4" />
-              {isExtracting ? 'Analisando...' : 'Preencher com IA'}
-            </Button>
-        </div>
+        {!isEditMode && (
+          <>
+            <div className="space-y-2">
+                <Label htmlFor="ai-text">Assistente de Compras</Label>
+                <Textarea
+                  id="ai-text"
+                  placeholder="Ex: Comprei 2 pizzas para a Maria por R$ 80, no crédito em 1x no Inter."
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                />
+                <Button onClick={handleExtract} disabled={isExtracting} size="sm" className="w-full">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isExtracting ? 'Analisando...' : 'Preencher com IA'}
+                </Button>
+            </div>
 
-        <div className="relative my-4">
-          <Separator />
-          <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-background px-2 text-xs text-muted-foreground">
-            OU
-          </span>
-        </div>
+            <div className="relative my-4">
+              <Separator />
+              <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-background px-2 text-xs text-muted-foreground">
+                OU
+              </span>
+            </div>
+          </>
+        )}
 
 
         <Form {...form}>

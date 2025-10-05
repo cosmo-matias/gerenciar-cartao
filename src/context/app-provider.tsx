@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
@@ -8,7 +9,7 @@ import {
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
-import { collection, doc, Firestore } from 'firebase/firestore';
+import { collection, doc, Firestore, arrayUnion, arrayRemove } from 'firebase/firestore';
 import type { Person, Card, Purchase } from '@/lib/types';
 
 interface AppContextType {
@@ -24,6 +25,7 @@ interface AppContextType {
   addPurchase: (purchaseData: Omit<Purchase, 'id'>) => void;
   updatePurchase: (purchaseData: Purchase) => void;
   deletePurchase: (purchaseId: string) => void;
+  toggleInstallmentPaidStatus: (purchaseId: string, installmentNumber: number, isPaid: boolean) => void;
   isLoaded: boolean;
 }
 
@@ -109,7 +111,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addPurchase = (purchaseData: Omit<Purchase, 'id'>) => {
     if (!purchasesCollectionRef) return;
-    addDocumentNonBlocking(purchasesCollectionRef, purchaseData);
+    const dataWithPaidArray = { ...purchaseData, paidInstallments: [] };
+    addDocumentNonBlocking(purchasesCollectionRef, dataWithPaidArray);
   };
 
   const updatePurchase = (purchaseData: Purchase) => {
@@ -123,6 +126,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     const purchaseDocRef = doc(firestore, 'users', user.uid, 'purchases', purchaseId);
     deleteDocumentNonBlocking(purchaseDocRef);
+  };
+  
+  const toggleInstallmentPaidStatus = (purchaseId: string, installmentNumber: number, isPaid: boolean) => {
+    if (!user) return;
+    const purchaseDocRef = doc(firestore, 'users', user.uid, 'purchases', purchaseId);
+    updateDocumentNonBlocking(purchaseDocRef, {
+        paidInstallments: isPaid ? arrayUnion(installmentNumber) : arrayRemove(installmentNumber)
+    });
   };
 
   const value = {
@@ -138,6 +149,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addPurchase,
     updatePurchase,
     deletePurchase,
+    toggleInstallmentPaidStatus,
     isLoaded,
   };
   

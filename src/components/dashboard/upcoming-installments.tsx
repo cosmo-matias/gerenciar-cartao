@@ -1,11 +1,13 @@
+
 "use client";
 
 import { useMemo } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAppContext } from '@/context/app-provider';
-import { calculateInstallments, formatCurrency } from '@/lib/utils';
+import { calculateInstallments, formatCurrency, cn } from '@/lib/utils';
 import { getMonth, getYear, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -38,7 +40,7 @@ interface UpcomingInstallmentsProps {
 }
 
 export function UpcomingInstallments({ className, onEdit }: UpcomingInstallmentsProps) {
-  const { purchases, cards, people, isLoaded, deletePurchase } = useAppContext();
+  const { purchases, cards, people, isLoaded, deletePurchase, toggleInstallmentPaidStatus } = useAppContext();
 
   const upcomingInstallments = useMemo(() => {
     if (!isLoaded) return [];
@@ -63,7 +65,12 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
           personName: person?.name || 'N/A',
         };
       })
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+      .sort((a, b) => {
+        if (a.isPaid !== b.isPaid) {
+          return a.isPaid ? 1 : -1;
+        }
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      });
   }, [purchases, cards, people, isLoaded]);
 
   const emptyStateImage = PlaceHolderImages.find(img => img.id === 'empty-state-illustration');
@@ -91,6 +98,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">Pago</TableHead>
                 <TableHead>Pessoa</TableHead>
                 <TableHead>Loja</TableHead>
                 <TableHead>Parcela</TableHead>
@@ -100,11 +108,20 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
             </TableHeader>
             <TableBody>
               {upcomingInstallments.map(installment => (
-                <TableRow key={installment.id}>
-                  <TableCell className="font-medium">{installment.personName}</TableCell>
-                  <TableCell>{installment.store}</TableCell>
-                  <TableCell>{`${installment.installmentNumber}/${installment.totalInstallments}`}</TableCell>
-                  <TableCell>{formatCurrency(installment.amount)}</TableCell>
+                <TableRow key={installment.id} data-state={installment.isPaid ? "paid" : ""}>
+                  <TableCell>
+                      <Checkbox
+                        checked={installment.isPaid}
+                        onCheckedChange={(checked) => {
+                            toggleInstallmentPaidStatus(installment.purchaseId, installment.installmentNumber, !!checked);
+                        }}
+                        aria-label="Marcar como pago"
+                      />
+                  </TableCell>
+                  <TableCell className={cn("font-medium", { "line-through text-muted-foreground": installment.isPaid })}>{installment.personName}</TableCell>
+                  <TableCell className={cn({ "line-through text-muted-foreground": installment.isPaid })}>{installment.store}</TableCell>
+                  <TableCell className={cn({ "line-through text-muted-foreground": installment.isPaid })}>{`${installment.installmentNumber}/${installment.totalInstallments}`}</TableCell>
+                  <TableCell className={cn({ "line-through text-muted-foreground": installment.isPaid })}>{formatCurrency(installment.amount)}</TableCell>
                    <TableCell className="text-right">
                        <AlertDialog>
                         <DropdownMenu>

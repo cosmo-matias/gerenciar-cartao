@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { addMonths, setDate, getDate, getMonth, getYear } from 'date-fns';
@@ -16,7 +17,7 @@ export function formatCurrency(value: number) {
 
 export function calculateInstallments(purchase: Purchase, card: Card): Installment[] {
   const installments: Installment[] = [];
-  const { totalAmount, installments: numInstallments, purchaseDate: purchaseDateStr, store, personId, id: purchaseId } = purchase;
+  const { totalAmount, installments: numInstallments, purchaseDate: purchaseDateStr, store, personId, id: purchaseId, paidInstallments } = purchase;
   const installmentAmount = totalAmount / numInstallments;
   const purchaseDate = new Date(purchaseDateStr);
 
@@ -45,6 +46,7 @@ export function calculateInstallments(purchase: Purchase, card: Card): Installme
       amount: installmentAmount,
       dueDate: dueDate.toISOString(),
       store,
+      isPaid: paidInstallments?.includes(i) || false,
     });
   }
 

@@ -1,3 +1,4 @@
+
 export interface Person {
   id: string;
   name: string;
@@ -21,6 +22,7 @@ export interface Purchase {
   totalAmount: number;
   installments: number;
   purchaseDate: string; // ISO string
+  paidInstallments: number[]; // Array of paid installment numbers
 }
 
 export interface Installment {
@@ -32,4 +34,5 @@ export interface Installment {
   amount: number;
   dueDate: string; // ISO string
   store: string;
+  isPaid: boolean;
 }
