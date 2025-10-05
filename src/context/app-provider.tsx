@@ -86,7 +86,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deletePerson = async (personId: string) => {
-    if (!user) return;
+    if (!user || !purchasesCollectionRef) return;
     const batch = writeBatch(firestore);
     
     // 1. Delete the person doc
@@ -94,7 +94,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     batch.delete(personDocRef);
 
     // 2. Find and delete all purchases associated with that person
-    const purchasesQuery = query(purchasesCollectionRef!, where("personId", "==", personId));
+    const purchasesQuery = query(purchasesCollectionRef, where("personId", "==", personId));
     const purchasesSnapshot = await getDocs(purchasesQuery);
     purchasesSnapshot.forEach(doc => {
       batch.delete(doc.ref);
@@ -117,7 +117,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCard = async (cardId: string) => {
-    if (!user) return;
+    if (!user || !purchasesCollectionRef) return;
     const batch = writeBatch(firestore);
 
     // 1. Delete the card
@@ -125,7 +125,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     batch.delete(cardDocRef);
 
     // 2. Find and delete all purchases associated with that card
-    const purchasesQuery = query(purchasesCollectionRef!, where("cardId", "==", cardId));
+    const purchasesQuery = query(purchasesCollectionRef, where("cardId", "==", cardId));
     const purchasesSnapshot = await getDocs(purchasesQuery);
     purchasesSnapshot.forEach(doc => {
       batch.delete(doc.ref);

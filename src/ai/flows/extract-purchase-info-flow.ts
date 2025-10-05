@@ -57,7 +57,7 @@ Instruções:
 4.  Identifique a loja ('store').
 5.  Calcule o valor total ('totalAmount'). Some os valores se houver vários itens.
 6.  Identifique o número de parcelas ('installments'). O padrão é 1 se não for mencionado.
-7.  Descreva brevemente os itens ('items').
+7.  Descreva brevemente os itens ('items'). Se não houver descrição de itens, deixe em branco.
 
 Responda apenas com a estrutura de dados solicitada.`,
 });
