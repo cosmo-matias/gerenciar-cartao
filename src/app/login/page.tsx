@@ -64,16 +64,20 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      toast({
-        title: 'Login bem-sucedido!',
-        description: 'Bem-vindo de volta.',
-      });
+      // On successful login, Firebase's onAuthStateChanged listener will handle the redirect.
+      // We can also push the user directly for a faster perceived response.
       router.push('/');
     } catch (error: any) {
+      let description = 'Ocorreu um erro desconhecido.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+          description = 'E-mail ou senha inválidos. Por favor, verifique e tente novamente.';
+      } else {
+          description = error.message;
+      }
       toast({
         variant: 'destructive',
         title: 'Erro no login',
-        description: error.message,
+        description: description,
       });
     } finally {
       setIsSubmitting(false);
@@ -183,10 +187,10 @@ export default function LoginPage() {
                 </AlertDialogHeader>
                 <div className="space-y-2">
                    <Label htmlFor="reset-email">E-mail</Label>
-                   <Input 
+                   <Input
                       id="reset-email"
-                      type="email" 
-                      placeholder="seu@email.com" 
+                      type="email"
+                      placeholder="seu@email.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                     />
