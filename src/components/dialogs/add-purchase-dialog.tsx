@@ -27,7 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
-import { extractPurchaseInfo, ExtractPurchaseInfoInput, ExtractPurchaseInfoOutput } from '@/ai/flows/extract-purchase-info-flow';
+import { extractPurchaseInfo } from '@/ai/flows/extract-purchase-info-flow';
 import { Separator } from '../ui/separator';
 import { Label } from '@/components/ui/label';
 
@@ -273,7 +273,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cartão</FormLabel>
-                    <Select onValuechaveChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o cartão" />

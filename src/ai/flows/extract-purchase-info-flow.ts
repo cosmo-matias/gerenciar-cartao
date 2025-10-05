@@ -44,22 +44,22 @@ const purchaseExtractorPrompt = ai.definePrompt({
     name: 'purchaseExtractorPrompt',
     input: { schema: ExtractPurchaseInfoInputSchema },
     output: { schema: ExtractPurchaseInfoOutputSchema },
-    prompt: `Você é um assistente especialista em finanças. Sua tarefa é extrair informações de uma compra a partir de um texto e preencher os campos correspondentes.
+    prompt: `Você é um assistente especialista em finanças. Sua tarefa é extrair informações de uma compra a partir de um texto e preencher os dados.
 
 Contexto Disponível:
-- Lista de Pessoas: Você receberá uma lista de pessoas cadastradas ({{json people}}). Use o nome no texto para encontrar o 'personId' correto. Se o nome não corresponder a ninguém na lista, deixe o campo personId em branco.
-- Lista de Cartões: Você receberá uma lista de cartões de crédito ({{json cards}}). Use o nome do cartão no texto para encontrar o 'cardId' correto. Se o nome do cartão não corresponder a nenhum na lista, deixe o campo cardId em branco.
+- Lista de Pessoas: {{json people}}. Use o nome no texto para encontrar o 'personId' correto. Se o nome não corresponder a ninguém, deixe o personId em branco.
+- Lista de Cartões: {{json cards}}. Use o nome do cartão no texto para encontrar o 'cardId' correto. Se o nome do cartão não corresponder a nenhum, deixe o cardId em branco.
 
 Instruções:
-1.  Analise o seguinte texto: {{{text}}}
-2.  Identifique a pessoa. Associe ao 'personId' correspondente da lista fornecida.
-3.  Identifique o cartão. Associe ao 'cardId' correspondente da lista fornecida.
-4.  Identifique o nome da loja ('store').
-5.  Calcule o valor total da compra ('totalAmount'). Se houver vários itens, some os valores.
-6.  Identifique o número de parcelas ('installments'). Se não for mencionado, o valor padrão é 1.
-7.  Descreva brevemente os itens comprados ('items').
+1.  Analise o texto: {{{text}}}
+2.  Identifique a pessoa e associe ao 'personId' correspondente.
+3.  Identifique o cartão e associe ao 'cardId' correspondente.
+4.  Identifique a loja ('store').
+5.  Calcule o valor total ('totalAmount'). Some os valores se houver vários itens.
+6.  Identifique o número de parcelas ('installments'). O padrão é 1 se não for mencionado.
+7.  Descreva brevemente os itens ('items').
 
-Responda apenas com a estrutura de dados de saída solicitada.`,
+Responda apenas com a estrutura de dados solicitada.`,
 });
 
 // Define o fluxo da IA
