@@ -1,13 +1,13 @@
 export interface Person {
   id: string;
   name: string;
-  phone: string;
+  phoneNumber: string;
 }
 
 export interface Card {
   id: string;
   name: string;
-  flag: string;
+  brand: string;
   dueDate: number;
   closingDate: number;
 }

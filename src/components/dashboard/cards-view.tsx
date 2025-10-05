@@ -59,7 +59,7 @@ export function CardsView({ className, onEditCard }: CardsViewProps) {
             cards.map(card => (
               <TableRow key={card.id}>
                 <TableCell className="font-medium">{card.name}</TableCell>
-                <TableCell>{card.flag}</TableCell>
+                <TableCell>{card.brand}</TableCell>
                 <TableCell>Dia {card.dueDate}</TableCell>
                 <TableCell className="text-right">
                   <AlertDialog>

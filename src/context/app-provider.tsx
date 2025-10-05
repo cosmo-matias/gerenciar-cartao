@@ -1,8 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import useLocalStorage from '@/hooks/use-local-storage';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import {
+  addDocumentNonBlocking,
+  updateDocumentNonBlocking,
+  deleteDocumentNonBlocking,
+} from '@/firebase/non-blocking-updates';
+import { collection, doc, Firestore } from 'firebase/firestore';
 import type { Person, Card, Purchase } from '@/lib/types';
+import { initiateAnonymousSignIn, useAuth } from '@/firebase';
 
 interface AppContextType {
   people: Person[];
@@ -22,73 +29,106 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const initialData = {
-  people: [],
-  cards: [],
-  purchases: [],
+const getCollectionRef = (firestore: Firestore, userId: string, path: string) => {
+  return collection(firestore, 'users', userId, path);
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [people, setPeople] = useLocalStorage<Person[]>('cardbuddy_people', initialData.people);
-  const [cards, setCards] = useLocalStorage<Card[]>('cardbuddy_cards', initialData.cards);
-  const [purchases, setPurchases] = useLocalStorage<Purchase[]>('cardbuddy_purchases', initialData.purchases);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
 
   useEffect(() => {
-    // This effect runs only on the client, after initial render
-    // which avoids hydration errors.
-    setIsLoaded(true);
-  }, []);
+    if (!user && !isUserLoading) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
+
+  const peopleCollectionRef = useMemoFirebase(
+    () => (user ? getCollectionRef(firestore, user.uid, 'people') : null),
+    [firestore, user]
+  );
+  const cardsCollectionRef = useMemoFirebase(
+    () => (user ? getCollectionRef(firestore, user.uid, 'creditCards') : null),
+    [firestore, user]
+  );
+  const purchasesCollectionRef = useMemoFirebase(
+    () => (user ? getCollectionRef(firestore, user.uid, 'purchases') : null),
+    [firestore, user]
+  );
+
+  const { data: peopleData, isLoading: peopleLoading } = useCollection<Person>(peopleCollectionRef);
+  const { data: cardsData, isLoading: cardsLoading } = useCollection<Card>(cardsCollectionRef);
+  const { data: purchasesData, isLoading: purchasesLoading } = useCollection<Purchase>(purchasesCollectionRef);
+  
+  const isLoaded = useMemo(() => {
+    return !!user && !peopleLoading && !cardsLoading && !purchasesLoading;
+  }, [user, peopleLoading, cardsLoading, purchasesLoading]);
 
   const addPerson = (personData: Omit<Person, 'id'>) => {
-    const newPerson: Person = { id: crypto.randomUUID(), ...personData };
-    setPeople(prev => [...prev, newPerson]);
+    if (!peopleCollectionRef) return;
+    addDocumentNonBlocking(peopleCollectionRef, personData);
   };
 
   const updatePerson = (personData: Person) => {
-    setPeople(prev => prev.map(p => p.id === personData.id ? personData : p));
+    if (!user) return;
+    const personDocRef = doc(firestore, 'users', user.uid, 'people', personData.id);
+    const { id, ...dataToUpdate } = personData;
+    updateDocumentNonBlocking(personDocRef, dataToUpdate);
   };
-  
+
   const deletePerson = (personId: string) => {
-    setPeople(prev => prev.filter(p => p.id !== personId));
+    if (!user) return;
+    const personDocRef = doc(firestore, 'users', user.uid, 'people', personId);
+    deleteDocumentNonBlocking(personDocRef);
   };
 
   const addCard = (cardData: Omit<Card, 'id'>) => {
-    const newCard: Card = { id: crypto.randomUUID(), ...cardData };
-    setCards(prev => [...prev, newCard]);
+    if (!cardsCollectionRef) return;
+    addDocumentNonBlocking(cardsCollectionRef, cardData);
   };
-  
+
   const updateCard = (cardData: Card) => {
-    setCards(prev => prev.map(c => c.id === cardData.id ? cardData : c));
+    if (!user) return;
+    const cardDocRef = doc(firestore, 'users', user.uid, 'creditCards', cardData.id);
+    const { id, ...dataToUpdate } = cardData;
+    updateDocumentNonBlocking(cardDocRef, dataToUpdate);
   };
 
   const deleteCard = (cardId: string) => {
-    setCards(prev => prev.filter(c => c.id !== cardId));
+    if (!user) return;
+    const cardDocRef = doc(firestore, 'users', user.uid, 'creditCards', cardId);
+    deleteDocumentNonBlocking(cardDocRef);
   };
 
   const addPurchase = (purchaseData: Omit<Purchase, 'id'>) => {
-    const newPurchase: Purchase = { id: crypto.randomUUID(), ...purchaseData };
-    setPurchases(prev => [...prev, newPurchase]);
+    if (!purchasesCollectionRef) return;
+    addDocumentNonBlocking(purchasesCollectionRef, purchaseData);
   };
-  
+
   const updatePurchase = (purchaseData: Purchase) => {
-    setPurchases(prev => prev.map(p => p.id === purchaseData.id ? purchaseData : p));
+    if (!user) return;
+    const purchaseDocRef = doc(firestore, 'users', user.uid, 'purchases', purchaseData.id);
+    const { id, ...dataToUpdate } = purchaseData;
+    updateDocumentNonBlocking(purchaseDocRef, dataToUpdate);
   };
 
   const deletePurchase = (purchaseId: string) => {
-    setPurchases(prev => prev.filter(p => p.id !== purchaseId));
-  }
+    if (!user) return;
+    const purchaseDocRef = doc(firestore, 'users', user.uid, 'purchases', purchaseId);
+    deleteDocumentNonBlocking(purchaseDocRef);
+  };
 
   const value = {
-    people,
+    people: peopleData || [],
     addPerson,
     updatePerson,
     deletePerson,
-    cards,
+    cards: cardsData || [],
     addCard,
     updateCard,
     deleteCard,
-    purchases,
+    purchases: purchasesData || [],
     addPurchase,
     updatePurchase,
     deletePurchase,

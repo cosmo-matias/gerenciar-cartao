@@ -21,7 +21,7 @@ import type { Card } from '@/lib/types';
 
 const cardSchema = z.object({
   name: z.string().min(2, { message: 'Nome do cartão deve ter pelo menos 2 caracteres.' }),
-  flag: z.string().min(2, { message: 'Bandeira deve ter pelo menos 2 caracteres.' }),
+  brand: z.string().min(2, { message: 'Bandeira deve ter pelo menos 2 caracteres.' }),
   dueDate: z.coerce.number().int().min(1).max(31, { message: 'Dia deve ser entre 1 e 31.' }),
   closingDate: z.coerce.number().int().min(1).max(31, { message: 'Dia deve ser entre 1 e 31.' }),
 });
@@ -41,28 +41,30 @@ export function AddCardDialog({ open, onOpenChange, card }: AddCardDialogProps) 
     resolver: zodResolver(cardSchema),
     defaultValues: {
       name: '',
-      flag: '',
-      dueDate: '' as any,
-      closingDate: '' as any,
+      brand: '',
+      dueDate: 1,
+      closingDate: 1,
     },
   });
 
   useEffect(() => {
-    if (isEditMode) {
-      form.reset(card);
-    } else {
-      form.reset({
-        name: '',
-        flag: '',
-        dueDate: '' as any,
-        closingDate: '' as any,
-      });
+    if (open) {
+      if (isEditMode && card) {
+        form.reset(card);
+      } else {
+        form.reset({
+          name: '',
+          brand: '',
+          dueDate: 1,
+          closingDate: 1,
+        });
+      }
     }
   }, [card, isEditMode, form, open]);
 
 
   const onSubmit = (values: z.infer<typeof cardSchema>) => {
-    if(isEditMode) {
+    if(isEditMode && card) {
       updateCard({ id: card.id, ...values });
       toast({
         title: "Sucesso!",
@@ -104,7 +106,7 @@ export function AddCardDialog({ open, onOpenChange, card }: AddCardDialogProps) 
             />
             <FormField
               control={form.control}
-              name="flag"
+              name="brand"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bandeira</FormLabel>

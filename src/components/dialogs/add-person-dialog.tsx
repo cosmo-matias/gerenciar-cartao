@@ -21,7 +21,7 @@ import type { Person } from '@/lib/types';
 
 const personSchema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres.' }),
-  phone: z.string().min(10, { message: 'Telefone deve ter pelo menos 10 dígitos.' }),
+  phoneNumber: z.string().min(10, { message: 'Telefone deve ter pelo menos 10 dígitos.' }),
 });
 
 type AddPersonDialogProps = {
@@ -39,20 +39,22 @@ export function AddPersonDialog({ open, onOpenChange, person }: AddPersonDialogP
     resolver: zodResolver(personSchema),
     defaultValues: {
       name: '',
-      phone: '',
+      phoneNumber: '',
     },
   });
 
   useEffect(() => {
-    if (isEditMode) {
-      form.reset(person);
-    } else {
-      form.reset({ name: '', phone: '' });
+    if (open) {
+      if (isEditMode && person) {
+        form.reset(person);
+      } else {
+        form.reset({ name: '', phoneNumber: '' });
+      }
     }
   }, [person, isEditMode, form, open]);
 
   const onSubmit = (values: z.infer<typeof personSchema>) => {
-    if(isEditMode) {
+    if(isEditMode && person) {
       updatePerson({ id: person.id, ...values });
       toast({
         title: "Sucesso!",
@@ -94,7 +96,7 @@ export function AddPersonDialog({ open, onOpenChange, person }: AddPersonDialogP
             />
             <FormField
               control={form.control}
-              name="phone"
+              name="phoneNumber"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Celular</FormLabel>
