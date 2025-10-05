@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useMemo } from 'react';
@@ -140,7 +141,7 @@ export function PeopleView({ className, onEditPerson }: PeopleViewProps) {
                             <TableCell className={cn({'line-through': inst.isPaid})}>{format(new Date(inst.dueDate), 'dd/MM/yy', { locale: ptBR })}</TableCell>
                             <TableCell className={cn({'line-through': inst.isPaid})}>{formatCurrency(inst.amount)}</TableCell>
                             <TableCell>
-                              <Badge variant={inst.isPaid ? 'secondary' : 'default'} className={cn({'bg-green-600 text-white': !inst.isPaid})}>
+                              <Badge variant={inst.isPaid ? 'secondary' : 'default'} className={cn({'bg-green-100 text-green-800': inst.isPaid, 'bg-yellow-100 text-yellow-800': !inst.isPaid})}>
                                 {inst.isPaid ? 'Pago' : 'Pendente'}
                               </Badge>
                             </TableCell>
