@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -64,15 +65,13 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      // On successful login, Firebase's onAuthStateChanged listener will handle the redirect.
-      // We can also push the user directly for a faster perceived response.
       router.push('/');
     } catch (error: any) {
       let description = 'Ocorreu um erro desconhecido.';
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
           description = 'E-mail ou senha inválidos. Por favor, verifique e tente novamente.';
-      } else {
-          description = error.message;
+      } else if (error.code) {
+          description = `Ocorreu um erro: ${error.code}`;
       }
       toast({
         variant: 'destructive',

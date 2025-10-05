@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -28,7 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
-import { extractPurchaseInfo, type ExtractPurchaseInfoOutput, type ExtractPurchaseInfoInput } from '@/ai/flows/extract-purchase-info-flow';
+import { extractPurchaseInfo } from '@/ai/flows/extract-purchase-info-flow';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 
@@ -37,7 +36,7 @@ const purchaseSchema = z.object({
   personId: z.string({ required_error: 'Selecione uma pessoa.' }),
   cardId: z.string({ required_error: 'Selecione um cartão.' }),
   store: z.string().min(2, { message: 'Nome da loja deve ter pelo menos 2 caracteres.' }),
-  items: z.string().min(2, { message: 'A descrição dos itens deve ter pelo menos 2 caracteres.' }),
+  items: z.string().optional(),
   totalAmount: z.coerce.number().positive({ message: 'Valor deve ser positivo.' }),
   installments: z.coerce.number().int().min(1, { message: 'Mínimo de 1 parcela.' }),
   purchaseDate: z.date({ required_error: 'Selecione a data da compra.' }),
@@ -61,8 +60,9 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
     defaultValues: {
       store: '',
       items: '',
-      totalAmount: '' as any,
+      totalAmount: undefined,
       installments: 1,
+      purchaseDate: new Date(),
     },
   });
 
@@ -71,6 +71,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
       if (isEditMode && purchase) {
         form.reset({
           ...purchase,
+          totalAmount: purchase.totalAmount || undefined,
           purchaseDate: new Date(purchase.purchaseDate),
         });
       } else {
@@ -79,7 +80,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
           cardId: undefined,
           store: '',
           items: '',
-          totalAmount: '' as any,
+          totalAmount: undefined,
           installments: 1,
           purchaseDate: new Date(),
         });
@@ -138,6 +139,7 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
     const purchaseData = {
       ...values,
       purchaseDate: values.purchaseDate.toISOString(),
+      items: values.items || ''
     };
 
     if (isEditMode && purchase) {
@@ -230,12 +232,12 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
                 </FormItem>
               )}
             />
-            <FormField
+             <FormField
               control={form.control}
               name="items"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Itens Comprados</FormLabel>
+                  <FormLabel>Itens Comprados (Opcional)</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Ex: Camisa, Calça, etc." {...field} />
                   </FormControl>

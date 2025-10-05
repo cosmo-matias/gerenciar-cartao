@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useMemo } from 'react';
@@ -78,48 +77,48 @@ export function PeopleView({ className, onEditPerson }: PeopleViewProps) {
             {peopleWithDetails.map(person => (
               <AccordionItem value={person.id} key={person.id}>
                 <div className="flex items-center w-full pr-1">
-                    <AccordionTrigger className="w-full">
-                        <div className="flex justify-between items-center w-full">
-                            <span className="font-medium">{person.name}</span>
-                            <span className="text-sm text-muted-foreground">{formatCurrency(person.totalOwed)}</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AlertDialog>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                                <span className="sr-only">Abrir menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditPerson(person); }}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                            </DropdownMenuItem>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Excluir
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Essa ação não pode ser desfeita. Isso excluirá permanentemente a pessoa e todas as suas compras associadas.
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deletePerson(person.id)} className="bg-red-600 hover:bg-red-700">
-                                Excluir
-                            </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                  <AccordionTrigger className="flex-1">
+                      <div className="flex justify-between items-center w-full">
+                          <span className="font-medium">{person.name}</span>
+                          <span className="text-sm text-muted-foreground mr-2">{formatCurrency(person.totalOwed)}</span>
+                      </div>
+                  </AccordionTrigger>
+                  <AlertDialog>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                              <span className="sr-only">Abrir menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditPerson(person); }}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                          </DropdownMenuItem>
+                          <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Excluir
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              Essa ação não pode ser desfeita. Isso excluirá permanentemente a pessoa e todas as suas compras associadas.
+                          </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deletePerson(person.id)} className="bg-red-600 hover:bg-red-700">
+                              Excluir
+                          </AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
                 </div>
                 <AccordionContent>
                   {person.installments.length > 0 ? (

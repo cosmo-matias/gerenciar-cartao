@@ -9,7 +9,7 @@ import {
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
-import { collection, doc, Firestore, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, doc, Firestore, writeBatch, arrayUnion, arrayRemove, query, where, getDocs } from 'firebase/firestore';
 import type { Person, Card, Purchase } from '@/lib/types';
 
 interface AppContextType {
@@ -22,7 +22,7 @@ interface AppContextType {
   updateCard: (cardData: Card) => void;
   deleteCard: (cardId: string) => void;
   purchases: Purchase[];
-  addPurchase: (purchaseData: Omit<Purchase, 'id'>) => void;
+  addPurchase: (purchaseData: Omit<Purchase, 'id' | 'paidInstallments'>) => void;
   updatePurchase: (purchaseData: Purchase) => void;
   deletePurchase: (purchaseId: string) => void;
   toggleInstallmentPaidStatus: (purchaseId: string, installmentNumber: number, isPaid: boolean) => void;
@@ -85,11 +85,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateDocumentNonBlocking(personDocRef, dataToUpdate);
   };
 
-  const deletePerson = (personId: string) => {
+  const deletePerson = async (personId: string) => {
     if (!user) return;
+    const batch = writeBatch(firestore);
+    
+    // 1. Delete the person doc
     const personDocRef = doc(firestore, 'users', user.uid, 'people', personId);
-    deleteDocumentNonBlocking(personDocRef);
+    batch.delete(personDocRef);
+
+    // 2. Find and delete all purchases associated with that person
+    const purchasesQuery = query(purchasesCollectionRef!, where("personId", "==", personId));
+    const purchasesSnapshot = await getDocs(purchasesQuery);
+    purchasesSnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
   };
+
 
   const addCard = (cardData: Omit<Card, 'id'>) => {
     if (!cardsCollectionRef) return;
@@ -103,13 +116,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateDocumentNonBlocking(cardDocRef, dataToUpdate);
   };
 
-  const deleteCard = (cardId: string) => {
+  const deleteCard = async (cardId: string) => {
     if (!user) return;
+    const batch = writeBatch(firestore);
+
+    // 1. Delete the card
     const cardDocRef = doc(firestore, 'users', user.uid, 'creditCards', cardId);
-    deleteDocumentNonBlocking(cardDocRef);
+    batch.delete(cardDocRef);
+
+    // 2. Find and delete all purchases associated with that card
+    const purchasesQuery = query(purchasesCollectionRef!, where("cardId", "==", cardId));
+    const purchasesSnapshot = await getDocs(purchasesQuery);
+    purchasesSnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
   };
 
-  const addPurchase = (purchaseData: Omit<Purchase, 'id'>) => {
+  const addPurchase = (purchaseData: Omit<Purchase, 'id' | 'paidInstallments'>) => {
     if (!purchasesCollectionRef) return;
     const dataWithPaidArray = { ...purchaseData, paidInstallments: [] };
     addDocumentNonBlocking(purchasesCollectionRef, dataWithPaidArray);
