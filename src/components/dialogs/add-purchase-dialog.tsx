@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,13 +20,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/context/app-provider';
 import { useToast } from '@/components/ui/use-toast';
 import type { Purchase } from '@/lib/types';
+import { extractPurchaseInfo, ExtractPurchaseInfoInput, ExtractPurchaseInfoOutput } from '@/ai/flows/extract-purchase-info-flow';
+import { Separator } from '../ui/separator';
+import { Label } from '@/components/ui/label';
 
 
 const purchaseSchema = z.object({
@@ -48,6 +52,8 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
   const { people, cards, addPurchase, updatePurchase } = useAppContext();
   const { toast } = useToast();
   const isEditMode = !!purchase;
+  const [aiText, setAiText] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
@@ -60,23 +66,71 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
   });
 
   useEffect(() => {
-    if (isEditMode) {
-      form.reset({
-        ...purchase,
-        purchaseDate: new Date(purchase.purchaseDate),
-      });
-    } else {
-      form.reset({
-        personId: undefined,
-        cardId: undefined,
-        store: '',
-        items: '',
-        totalAmount: '' as any,
-        installments: 1,
-        purchaseDate: new Date(),
-      });
+    if (open) {
+      if (isEditMode && purchase) {
+        form.reset({
+          ...purchase,
+          purchaseDate: new Date(purchase.purchaseDate),
+        });
+      } else {
+        form.reset({
+          personId: undefined,
+          cardId: undefined,
+          store: '',
+          items: '',
+          totalAmount: '' as any,
+          installments: 1,
+          purchaseDate: new Date(),
+        });
+      }
+      setAiText(''); // Reset AI text field when dialog opens
     }
   }, [purchase, isEditMode, form, open]);
+
+
+  const handleExtract = async () => {
+    if (!aiText) {
+      toast({
+        variant: 'destructive',
+        title: 'Texto vazio',
+        description: 'Por favor, descreva a compra para usar a IA.',
+      });
+      return;
+    }
+    setIsExtracting(true);
+    try {
+      const availablePeople = people.map(({ id, name }) => ({ id, name }));
+      const availableCards = cards.map(({ id, name }) => ({ id, name }));
+
+      const result = await extractPurchaseInfo({
+        text: aiText,
+        people: availablePeople,
+        cards: availableCards,
+      });
+
+      if (result.personId) form.setValue('personId', result.personId);
+      if (result.cardId) form.setValue('cardId', result.cardId);
+      if (result.store) form.setValue('store', result.store);
+      if (result.totalAmount) form.setValue('totalAmount', result.totalAmount);
+      if (result.installments) form.setValue('installments', result.installments);
+      if (result.items) form.setValue('items', result.items);
+
+      toast({
+        title: 'Dados extraídos!',
+        description: 'O formulário foi preenchido com as informações da sua descrição.',
+      });
+
+    } catch (error) {
+      console.error('Error extracting purchase info:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro da IA',
+        description: 'Não foi possível extrair as informações. Tente ser mais específico.',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
 
   const onSubmit = (values: z.infer<typeof purchaseSchema>) => {
@@ -104,15 +158,38 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Editar Compra' : 'Adicionar Compra'}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Atualize os dados da compra.' : 'Preencha os dados da nova compra.'}
+            {isEditMode ? 'Atualize os dados da compra ou use a IA para preencher.' : 'Descreva a compra para a IA ou preencha os dados manualmente.'}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-2">
+            <Label htmlFor="ai-text">Assistente de Compras</Label>
+            <Textarea
+              id="ai-text"
+              placeholder="Ex: Comprei 2 pizzas para a Maria por R$ 80, no crédito em 1x no Inter."
+              value={aiText}
+              onChange={(e) => setAiText(e.target.value)}
+            />
+            <Button onClick={handleExtract} disabled={isExtracting} size="sm" className="w-full">
+              <Sparkles className="mr-2 h-4 w-4" />
+              {isExtracting ? 'Analisando...' : 'Preencher com IA'}
+            </Button>
+        </div>
+
+        <div className="relative">
+          <Separator />
+          <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-background px-2 text-xs text-muted-foreground">
+            OU
+          </span>
+        </div>
+
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="personId"
@@ -258,3 +335,5 @@ export function AddPurchaseDialog({ open, onOpenChange, purchase }: AddPurchaseD
     </Dialog>
   );
 }
+
+    

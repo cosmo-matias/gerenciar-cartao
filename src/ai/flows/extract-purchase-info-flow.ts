@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Um agente de IA que extrai informações de compras de texto em linguagem natural.
@@ -9,18 +10,17 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { Person, Card } from '@/lib/types';
 
-// Define o esquema para a entrada da IA
-export const ExtractPurchaseInfoInputSchema = z.object({
+// Define o esquema para a entrada da IA (não exportado)
+const ExtractPurchaseInfoInputSchema = z.object({
   text: z.string().describe('O texto em linguagem natural descrevendo a compra.'),
   people: z.array(z.object({ id: z.string(), name: z.string() })).describe('A lista de pessoas disponíveis para associar à compra.'),
   cards: z.array(z.object({ id: z.string(), name: z.string() })).describe('A lista de cartões de crédito disponíveis.'),
 });
 export type ExtractPurchaseInfoInput = z.infer<typeof ExtractPurchaseInfoInputSchema>;
 
-// Define o esquema para a saída da IA
-export const ExtractPurchaseInfoOutputSchema = z.object({
+// Define o esquema para a saída da IA (não exportado)
+const ExtractPurchaseInfoOutputSchema = z.object({
   personId: z.string().optional().describe('O ID da pessoa que fez a compra, correspondendo à lista de pessoas fornecida.'),
   cardId: z.string().optional().describe('O ID do cartão de crédito usado, correspondendo à lista de cartões fornecida.'),
   store: z.string().optional().describe('O nome da loja onde a compra foi feita.'),
@@ -49,13 +49,13 @@ const purchaseExtractorPrompt = ai.definePrompt({
     prompt: `Você é um assistente especialista em finanças. Sua tarefa é extrair informações de uma compra a partir de um texto e preencher os campos correspondentes.
 
 Contexto Disponível:
-- Lista de Pessoas: Você receberá uma lista de pessoas cadastradas. Use o nome no texto para encontrar o 'personId' correto. Se o nome não corresponder a ninguém na lista, deixe o campo personId em branco.
-- Lista de Cartões: Você receberá uma lista de cartões de crédito. Use o nome do cartão no texto para encontrar o 'cardId' correto. Se o nome do cartão não corresponder a nenhum na lista, deixe o campo cardId em branco.
+- Lista de Pessoas: Você receberá uma lista de pessoas cadastradas ({{json people}}). Use o nome no texto para encontrar o 'personId' correto. Se o nome não corresponder a ninguém na lista, deixe o campo personId em branco.
+- Lista de Cartões: Você receberá uma lista de cartões de crédito ({{json cards}}). Use o nome do cartão no texto para encontrar o 'cardId' correto. Se o nome do cartão não corresponder a nenhum na lista, deixe o campo cardId em branco.
 
 Instruções:
 1.  Analise o seguinte texto: {{{text}}}
-2.  Identifique a pessoa que fez a compra. A lista de pessoas disponíveis é: {{json people}}. Associe ao 'personId' correspondente.
-3.  Identifique o cartão de crédito utilizado. A lista de cartões disponíveis é: {{json cards}}. Associe ao 'cardId' correspondente.
+2.  Identifique a pessoa. Associe ao 'personId' correspondente da lista fornecida.
+3.  Identifique o cartão. Associe ao 'cardId' correspondente da lista fornecida.
 4.  Identifique o nome da loja ('store').
 5.  Calcule o valor total da compra ('totalAmount'). Se houver vários itens, some os valores.
 6.  Identifique o número de parcelas ('installments'). Se não for mencionado, o valor padrão é 1.
@@ -76,3 +76,4 @@ const extractPurchaseInfoFlow = ai.defineFlow(
     return output!;
   }
 );
+    
