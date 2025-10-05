@@ -1,19 +1,19 @@
 
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAppContext } from '@/context/app-provider';
 import { calculateInstallments, formatCurrency, cn } from '@/lib/utils';
-import { getMonth, getYear, format } from 'date-fns';
+import { getMonth, getYear, format, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,12 +41,21 @@ interface UpcomingInstallmentsProps {
 
 export function UpcomingInstallments({ className, onEdit }: UpcomingInstallmentsProps) {
   const { purchases, cards, people, isLoaded, deletePurchase, toggleInstallmentPaidStatus } = useAppContext();
+  const [displayedDate, setDisplayedDate] = useState(new Date());
 
-  const upcomingInstallments = useMemo(() => {
+  const handlePrevMonth = () => {
+    setDisplayedDate(current => subMonths(current, 1));
+  };
+
+  const handleNextMonth = () => {
+    setDisplayedDate(current => addMonths(current, 1));
+  };
+
+
+  const installmentsForMonth = useMemo(() => {
     if (!isLoaded) return [];
-    const now = new Date();
-    const currentMonth = getMonth(now);
-    const currentYear = getYear(now);
+    const displayedMonth = getMonth(displayedDate);
+    const displayedYear = getYear(displayedDate);
 
     return purchases
       .flatMap(purchase => {
@@ -56,7 +65,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
       })
       .filter(installment => {
         const dueDate = new Date(installment.dueDate);
-        return getMonth(dueDate) === currentMonth && getYear(dueDate) === currentYear;
+        return getMonth(dueDate) === displayedMonth && getYear(dueDate) === displayedYear;
       })
       .map(installment => {
         const person = people.find(p => p.id === installment.personId);
@@ -71,7 +80,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
         }
         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
       });
-  }, [purchases, cards, people, isLoaded]);
+  }, [purchases, cards, people, isLoaded, displayedDate]);
 
   const emptyStateImage = PlaceHolderImages.find(img => img.id === 'empty-state-illustration');
 
@@ -82,9 +91,22 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Parcelas a Vencer no Mês</CardTitle>
+        <div className="flex items-center justify-between">
+            <CardTitle>Parcelas a Vencer</CardTitle>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium capitalize w-28 text-center">
+                    {format(displayedDate, 'MMMM', { locale: ptBR })}
+                </span>
+                <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
         <CardDescription>
-          Vencimentos em {format(new Date(), 'MMMM', { locale: ptBR })}.
+          Vencimentos em {format(displayedDate, 'MMMM \'de\' yyyy', { locale: ptBR })}.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,7 +116,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-full" />
             </div>
-        ) : upcomingInstallments.length > 0 ? (
+        ) : installmentsForMonth.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -107,7 +129,7 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
               </TableRow>
             </TableHeader>
             <TableBody>
-              {upcomingInstallments.map(installment => (
+              {installmentsForMonth.map(installment => (
                 <TableRow key={installment.id} data-state={installment.isPaid ? "paid" : ""}>
                   <TableCell>
                       <Checkbox
@@ -179,8 +201,8 @@ export function UpcomingInstallments({ className, onEdit }: UpcomingInstallments
                 data-ai-hint={emptyStateImage.imageHint}
               />
             )}
-            <h3 className="text-lg font-semibold">Tudo tranquilo por aqui!</h3>
-            <p className="text-sm text-muted-foreground">Não há parcelas vencendo este mês.</p>
+            <h3 className="text-lg font-semibold">Nenhuma parcela encontrada!</h3>
+            <p className="text-sm text-muted-foreground">Não há parcelas vencendo neste mês.</p>
           </div>
         )}
       </CardContent>
